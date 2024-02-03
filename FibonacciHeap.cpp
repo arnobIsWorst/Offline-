@@ -81,6 +81,28 @@ class FibonacciHeap{
     int find_max(heapNode *hNode){
         return hNode->key;         //return value later
     }
+    
+    heapNode* meld(heapNode *h1, heapNode *h2){   //need edits
+        if(h1 == NULL && h2 == NULL){
+            return NULL;
+        }else if(h1 != NULL && h2 == NULL){
+            return h1;
+        }else if(h1 == NULL && h2 != NULL){
+            return h2;
+        }else{
+            heapNode* leftNode = h1->left;
+            heapNode* rightNode = h2->right;
+            h1->left = h2;
+            h2->right = h1;
+            leftNode->right = rightNode;
+            rightNode->left = leftNode;
+            if(h1->key > h2->key){
+                return h1;
+            }else{
+                return h2;
+            }
+        }
+    }
 
     void print(heapNode *hNode){
         
