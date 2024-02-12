@@ -45,6 +45,7 @@ long long previousPrime(long long num){
 
 class chainingHash{
    long long N, currentMaxLen, size, collisions, probes, chainLength;
+   int whichFunc;
 
    class Node{
     string key;
@@ -95,11 +96,12 @@ class chainingHash{
     }
    
  public:
-   chainingHash(long long N, long long chainLength ){
+   chainingHash(long long N, long long chainLength, int funcNum ){
         this -> N = N;  //make sure this comes as a prime number
         this -> currentMaxLen = N;
         this -> size = 0;
         this -> chainLength = chainLength;
+        this -> whichFunc = funcNum;
         this -> collisions = 0;
         this -> probes = 1;
 
@@ -111,6 +113,7 @@ class chainingHash{
    chainingHash(const chainingHash& other){
         this -> N = other.N;
         this -> currentMaxLen = other.currentMaxLen;
+        this -> whichFunc = other.whichFunc;
         this -> size = other.size;
         this -> collisions = other.collisions;
         this -> probes = other.probes;
@@ -157,12 +160,48 @@ class chainingHash{
    }
 
    void insert(string key, long long value){
+        long long i = whichFunc == 1 ? hash1(key) : hash2(key);
+
+        i = i % currentMaxLen;
+
+        if (hashTable[i] == nullptr ){
+            hashTable[i] = new Node(key, value);
+        }else{
+            //implement sorted insert
+            collisions++;
+            Node *temp = hashTable[i];
+
+            while (temp -> getNext() != nullptr){
+                temp = temp->getNext();
+            }
+
+            temp->setNext(new Node(key,value));
+        }
         
         size++;
    }
 
-   bool find(){
+   long long find(string key){
+        long long i = whichFunc == 1? hash1(key) : hash2(key);
 
+        i = i % currentMaxLen;
+
+        if (hashTable[i] == nullptr){
+           return -1;
+        }else{
+            Node *temp = hashTable[i];
+            probes++;
+
+            while (true){
+                if (temp -> getKey() == key){
+                    return temp->getValue();
+                }else if(temp -> getNext() == nullptr){
+                    return -1;
+                }
+                temp = temp -> getNext();
+                probes++;
+            }  
+        }    
    }
 
    void reHash(long long n){
@@ -194,7 +233,63 @@ class chainingHash{
    }
 
    void deleteNode(string key){
-    
+        long long i = whichFunc == 1 ? hash1(key) : hash2(key);
+        
+        i = i % currentMaxLen;
+
+        if (hashTable[i] == nullptr){
+            return;
+        }else{
+            Node *temp = hashTable[i];
+
+            if (temp -> getKey() == key){
+                hashTable[i] = temp -> getNext();
+                delete temp;
+                size--;
+                return ;
+            }
+
+            while (temp -> getNext() != nullptr){
+                if (temp -> getNext() -> getKey() == key){
+                    Node *t2 = temp->getNext();
+                    temp->setNext(temp->getNext()->getNext());
+                    delete t2;
+                    size--;
+                    return;
+                }
+                temp = temp->getNext();   
+            }
+        }
    }
 
+   bool checkChainlengthConstraint(){
+        long long maxLen = 0, currLen = 0;
+        
+        for (long long i = 0; i < currentMaxLen; i++){
+            if (hashTable[i] == nullptr){
+                currLen = 0;
+                continue;
+            }else{
+                Node *temp = hashTable[i];
+                while (temp != nullptr){
+                    currLen++;
+                    temp = temp ->getNext();
+                }
+
+                maxLen = currLen > maxLen ? currLen : maxLen;
+                currLen = 0;
+            }
+        }
+
+        if (maxLen > chainLength){
+            return true;
+        }
+        
+        if (maxLen < 0.8 * chainLength ){
+            if (nextPrime(currentMaxLen/2) < N){
+                return false;
+            }
+            return true;
+        }
+   }
 };
