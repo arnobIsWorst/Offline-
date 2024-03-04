@@ -16,7 +16,7 @@ using namespace std;
 //     return dp[n][w];
 // }
 
-double knapsack2(int wt[], double val[], int w, int n, vector<vector<int> > &dp, double maxVal){
+double knapsack2(int wt[], double val[], int n, vector<vector<int> > &dp, double maxVal){
     for (size_t i = 1; i <= maxVal; i++)
        dp[0][i] = 1e9;
    
@@ -28,7 +28,7 @@ double knapsack2(int wt[], double val[], int w, int n, vector<vector<int> > &dp,
     return dp[n][maxVal];
 }
 
-pair<int,vector<int>> traverse(vector<vector<int> > &dp, int wt[], double val[]){
+pair<int,vector<int> > traverse(vector<vector<int> > &dp, int wt[], double val[]){
     vector<int>chosenItems;
 
     int i = dp.size()-1;
@@ -73,7 +73,7 @@ int main(){
     int prevWeight = 0, newWeight = 0;
     
     double inVal = 1;
-    while (newWeight = knapsack2(wt,val,w,n,dp2,inVal) < w){
+    while (newWeight = knapsack2(wt,val,n,dp2,inVal) < w){
         prevWeight = newWeight;
         inVal++;
 
@@ -88,14 +88,9 @@ int main(){
     cout<<"Original Instance: \n";
     cout<<"Answer: "<<maxVal<<"\n";
 
-    //int minWeight = knapsack2(wt,val,w,n,dp2,maxVal);
-    //cout<<"Answer: "<<minWeight<<"\n";
-
-    // pair<int,vector<int>> result = traverse(dp,wt,val);
-    pair<int,vector<int>> result = traverse(dp,wt,val);
+    pair<int,vector<int> > result = traverse(dp,wt,val);
     
     cout<<"Used Weight: "<<result.first<<endl;
-
     cout<<"Indices: ";
 
     for (size_t i = 0; i < result.second.size(); i++){
@@ -104,10 +99,11 @@ int main(){
 
     cout<<endl;
 
-    double epsilon = 0.5;
-    double theta = (epsilon * vmax) / (2*n);
-    cout<<"\nTheta: "<<theta<<endl;
+    double epsilon = 0.2;
+    cout<<"\nRounded Instance with Eps: "<<epsilon<<"\n";
 
+    double theta = (epsilon * vmax) / (2*n);
+    cout<<"Theta: "<<theta<<endl;
     double roundedVal[n];
 
     for (size_t i = 0; i < n; i++){
@@ -115,28 +111,50 @@ int main(){
     }
     
     // dp.clear();
-    // dp.resize(n+1,vector<int>(w+1,0));
+    // dp.resize(n+1,vector<int>(1,0));
+    dp2.clear();
+    dp2.resize(n+1,vector<int>(2,0));
 
-    // double reducedMaxVal = knapsack(wt,roundedVal,w,n,dp);
-    // cout<<"Answer of Reduced Instance: "<<reducedMaxVal<<endl;
-    // double reducedByTheta = reducedMaxVal* 1.0 * theta;
-    // cout<<"Answer of Reduced Instance multiplied by theta: "<<reducedByTheta<<endl;
-    // dp2.clear();
-    // dp2.resize(n+1,vector<int>(reducedMaxVal+1,0));
-    // int reducedMinWeight = knapsack2(wt,roundedVal,w,n,dp2,reducedMaxVal);
-    // result = traverse(dp2,wt,roundedVal);
-    // cout<<"Indices: ";
-    // for (size_t i = 0; i < result.second.size(); i++){
-    //     cout<<result.second[i]<<" ";
-    // }
-    // cout<<endl;
-    // double roundedUpValue = 0;
-    // for (size_t i = 0; i < result.second.size(); i++){
-    //     roundedUpValue += val[result.second[i]-1];
-    // }
-    // cout<<"Answer of Original Instance(Rounded Up): "<<roundedUpValue<<endl;
-    // cout<<"Used Weight: "<<result.first<<endl;
+    prevWeight = 0, newWeight = 0;
+    inVal = 1;
+    while (newWeight = knapsack2(wt,roundedVal,n,dp2,inVal) < w){
+        prevWeight = newWeight;
+        inVal++;
+
+        dp.clear();
+        dp.resize(n+1,vector<int>(inVal,0));
+        dp = dp2;
+
+        dp2.clear();
+        dp2.resize(n+1,vector<int>(inVal+1,0));
+    }
+
+    double reducedMaxVal = inVal-1;
+    cout<<"Answer of reduced instance: "<<reducedMaxVal<<"\n";
+    
+    double reducedInstanceMultiply = reducedMaxVal*theta;
+    cout<<"Answer of reduced instance multiplied by theta: "<<reducedInstanceMultiply<<"\n";
+
+    pair<int,vector<int> > result2 = traverse(dp,wt,roundedVal);
+    cout<<"Indices: ";
+
+    for (size_t i = 0; i < result2.second.size(); i++){
+        cout<<result2.second[i]<<" ";
+    }
+
+    cout<<endl;
+
+    vector<int> indices = result2.second;
+    double roundUpVal = 0;
+
+    for (size_t i = 0; i < indices.size(); i++){
+        roundUpVal += val[indices[i]-1]; 
+    }
+
+    cout<<"Answer of Original Instance(Rounded Up): "<<roundUpVal<<endl;
+    cout<<"Used Weight: "<<result2.first<<"\n";
+    float ratio = maxVal / roundUpVal;
+    cout<<"Ratio: "<< ratio<<"\n";
     return 0;
 }
-
 
